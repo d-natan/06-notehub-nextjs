@@ -1,8 +1,6 @@
-import dynamic from "next/dynamic";
+"use client";
 
-const NotesClient = dynamic(() => import("./Notes.client"), {
-  ssr: false,
-});
+import NotesClient from "./Notes.client";
 
 export default function NotesPage() {
   return <NotesClient />;
