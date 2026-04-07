@@ -1,0 +1,21 @@
+/* app/notes/Notes.module.css */
+.container {
+  padding: 1rem;
+}
+.title {
+  font-size: 2rem;
+}
+.searchInput {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  width: 100%;
+}
+.list {
+  list-style: none;
+  padding: 0;
+}
+.item {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
