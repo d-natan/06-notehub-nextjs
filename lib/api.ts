@@ -39,3 +39,10 @@ export async function createNote(note: Omit<Note, "id" | "createdAt" | "updatedA
   });
   return response.data;
 }
+
+export async function deleteNote(id: string) {
+  const response = await axios.delete(`${BASE_URL}/notes/${id}`, {
+    headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}` },
+  });
+  return response.data;
+}
