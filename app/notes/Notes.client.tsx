@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
-
-import { fetchNotes, FetchNotesResponse, deleteNote } from "../../lib/api";
+import { fetchNotes, deleteNote, FetchNotesResponse } from "../../lib/api";
 
 import SearchBox from "../../components/SearchBox/SearchBox";
 import NoteList from "../../components/NoteList/NoteList";
@@ -19,36 +18,31 @@ export default function NotesClient() {
 
   const queryClient = useQueryClient();
 
-  // debounce search
-  const debouncedSearch = useDebouncedCallback(
-    (value: string) => {
-      setSearch(value);
-      setPage(1);
-    },
-    500
-  );
+  const debouncedSearch = useDebouncedCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, 500);
 
-  const handleSearch = (value: string) => {
-    debouncedSearch(value);
-  };
+  const handleSearch = (value: string) => debouncedSearch(value);
+  const handlePageChange = (page: number) => setPage(page);
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
-
-  // Мутація для видалення нотатки
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteNote(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const { data, isLoading, isError } = useQuery<FetchNotesResponse>({
+  // ---- useQuery без keepPreviousData ----
+  const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes({ page, search }),
-    placeholderData: keepPreviousData,
+    // кеш залишаємо актуальним для короткого часу
+    staleTime: 5000,
+    // залишаємо попередні дані під час пагінації
+    // React Query v5 автоматично робить це при змінах queryKey
   });
+
+  // ---- useMutation для видалення нотатки ----
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteNote(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
+  });
+
+  const handleDelete = (id: string) => deleteMutation.mutate(id);
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading notes</p>;
@@ -63,10 +57,7 @@ export default function NotesClient() {
 
       {data && (
         <>
-          <NoteList
-            notes={data.notes}
-            handleDelete={(id: string) => deleteMutation.mutate(id)}
-          />
+          <NoteList notes={data.notes} handleDelete={handleDelete} />
 
           <Pagination
             totalPages={data.totalPages}
