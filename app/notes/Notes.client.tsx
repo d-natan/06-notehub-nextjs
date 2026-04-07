@@ -26,23 +26,20 @@ export default function NotesClient() {
   const handleSearch = (value: string) => debouncedSearch(value);
   const handlePageChange = (page: number) => setPage(page);
 
-  // ---- useQuery без keepPreviousData ----
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes({ page, search }),
-    // кеш залишаємо актуальним для короткого часу
-    staleTime: 5000,
-    // залишаємо попередні дані під час пагінації
-    // React Query v5 автоматично робить це при змінах queryKey
   });
 
-  // ---- useMutation для видалення нотатки ----
+  // Використовуємо useMutation для видалення нотатки
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteNote(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
+  mutationFn: (id: string) => deleteNote(id),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
   });
 
-  const handleDelete = (id: string) => deleteMutation.mutate(id);
+  const handleDelete = (id: string) => {
+  deleteMutation.mutate(id);
+  };
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading notes</p>;
