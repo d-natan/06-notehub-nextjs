@@ -32,3 +32,10 @@ export async function fetchNoteById(
 
   return res.data;
 }
+
+export async function createNote(note: Omit<Note, "id" | "createdAt" | "updatedAt">) {
+  const response = await axios.post(`${BASE_URL}/notes`, note, {
+    headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}` },
+  });
+  return response.data;
+}
