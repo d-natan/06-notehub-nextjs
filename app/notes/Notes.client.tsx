@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "../../lib/api";
 import { Note } from "../../types/note";
-import css from "./Notes.module.css"; // або свій CSS модуль
+import css from "./Notes.module.css";
 
 export default function NotesClient() {
   const [search, setSearch] = useState("");
