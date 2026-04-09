@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 import { fetchNotes, deleteNote, FetchNotesResponse } from "../../lib/api";
@@ -8,8 +9,13 @@ import { fetchNotes, deleteNote, FetchNotesResponse } from "../../lib/api";
 import SearchBox from "../../components/SearchBox/SearchBox";
 import NoteList from "../../components/NoteList/NoteList";
 import Pagination from "../../components/Pagination/Pagination";
-import Modal from "../../components/Modal/Modal";
 import NoteForm from "../../components/NoteForm/NoteForm";
+
+// ВАЖЛИВО: Modal підключаємо без SSR
+const Modal = dynamic(
+  () => import("../../components/Modal/Modal"),
+  { ssr: false }
+);
 
 export default function NotesClient() {
   const [page, setPage] = useState<number>(1);
@@ -24,6 +30,7 @@ export default function NotesClient() {
   }, 500);
 
   const handleSearch = (value: string) => debouncedSearch(value);
+
   const handlePageChange = (page: number) => setPage(page);
 
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
@@ -31,22 +38,29 @@ export default function NotesClient() {
     queryFn: () => fetchNotes({ page, search }),
   });
 
-  // Використовуємо useMutation для видалення нотатки
   const deleteMutation = useMutation({
-  mutationFn: (id: string) => deleteNote(id),
-  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
+    mutationFn: (id: string) => deleteNote(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["notes"],
+      });
+    },
   });
 
   const handleDelete = (id: string) => {
-  deleteMutation.mutate(id);
+    deleteMutation.mutate(id);
   };
 
   if (isLoading) return <p>Loading...</p>;
+
   if (isError) return <p>Error loading notes</p>;
 
   return (
     <>
-      <button type="button" onClick={() => setIsModalOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+      >
         Create note
       </button>
 
@@ -54,7 +68,10 @@ export default function NotesClient() {
 
       {data && (
         <>
-          <NoteList notes={data.notes} handleDelete={handleDelete} />
+          <NoteList
+            notes={data.notes}
+            handleDelete={handleDelete}
+          />
 
           <Pagination
             totalPages={data.totalPages}
@@ -66,7 +83,9 @@ export default function NotesClient() {
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onClose={() => setIsModalOpen(false)} />
+          <NoteForm
+            onClose={() => setIsModalOpen(false)}
+          />
         </Modal>
       )}
     </>
