@@ -1,47 +1,57 @@
-import { createPortal } from "react-dom";
-import { useEffect } from "react";
-import css from "./Modal.module.css";
+"use client";
 
-interface ModalProps {
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
+interface Props {
   children: React.ReactNode;
   onClose: () => void;
 }
 
-const modalRoot = document.getElementById("modal-root") as HTMLElement;
-
-export default function Modal({ children, onClose }: ModalProps) {
+export default function Modal({ children, onClose }: Props) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+      }
     };
 
     document.addEventListener("keydown", handleEsc);
 
-    // 🚫 блокуємо прокрутку
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
     return () => {
       document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = originalOverflow;
     };
   }, [onClose]);
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  // КЛЮЧОВЕ: захист від SSR
+  if (typeof document === "undefined") {
+    return null;
+  }
 
   return createPortal(
     <div
-      className={css.backdrop}
-      role="dialog"
-      aria-modal="true"
-      onClick={handleBackdropClick}
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
     >
-      <div className={css.modal}>{children}</div>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "white",
+          padding: 20,
+          borderRadius: 8,
+          minWidth: 300,
+        }}
+      >
+        {children}
+      </div>
     </div>,
-    modalRoot
+    document.body
   );
 }
