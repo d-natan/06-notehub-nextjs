@@ -29,7 +29,8 @@ export default function NotesClient() {
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes({ page, search }),
-    placeholderData: () => queryClient.getQueryData(["notes", page, search]),
+    placeholderData: () => queryClient.getQueryData<FetchNotesResponse>(["notes", page, search]),
+    staleTime: 1000, // замість keepPreviousData
   });
 
   if (isLoading) return <p>Loading...</p>;
@@ -43,16 +44,20 @@ export default function NotesClient() {
 
       <SearchBox onSearch={handleSearch} />
 
-      {data && (
+      {data?.notes.length ? (
         <>
           <NoteList notes={data.notes} />
 
-          <Pagination
-            totalPages={data.totalPages}
-            currentPage={page}
-            onPageChange={handlePageChange}
-          />
+          {data.totalPages > 1 && (
+            <Pagination
+              totalPages={data.totalPages}
+              currentPage={page}
+              onPageChange={handlePageChange}
+            />
+          )}
         </>
+      ) : (
+        <p>No notes found.</p>
       )}
 
       {isModalOpen && (
