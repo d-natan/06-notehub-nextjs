@@ -1,13 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
-import {
-  fetchNotes,
-  deleteNote,
-  FetchNotesResponse,
-} from "../../lib/api";
+import { fetchNotes, FetchNotesResponse } from "../../lib/api";
 
 import SearchBox from "../../components/SearchBox/SearchBox";
 import NoteList from "../../components/NoteList/NoteList";
@@ -16,9 +12,9 @@ import Modal from "../../components/Modal/Modal";
 import NoteForm from "../../components/NoteForm/NoteForm";
 
 export default function NotesClient() {
-  const [page, setPage] = useState<number>(1);
-  const [search, setSearch] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -33,21 +29,8 @@ export default function NotesClient() {
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes({ page, search }),
-    placeholderData: queryClient.getQueryData(["notes", page, search]),
+    placeholderData: () => queryClient.getQueryData(["notes", page, search]),
   });
-
-  // 🔹 useMutation для видалення нотатки
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteNote(id),
-    onSuccess: () => {
-      // 🔹 Правильна типізація для invalidateQueries
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
-  };
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error loading notes</p>;
@@ -62,7 +45,7 @@ export default function NotesClient() {
 
       {data && (
         <>
-          <NoteList notes={data.notes} handleDelete={handleDelete} />
+          <NoteList notes={data.notes} />
 
           <Pagination
             totalPages={data.totalPages}
