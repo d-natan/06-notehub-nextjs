@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { createPortal } from "react-dom";
+import ReactDOM from "react-dom";
 
-interface Props {
-  children: React.ReactNode;
+interface ModalProps {
   onClose: () => void;
+  children: React.ReactNode;
 }
 
-export default function Modal({ children, onClose }: Props) {
+export default function Modal({ onClose, children }: ModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -18,36 +18,25 @@ export default function Modal({ children, onClose }: Props) {
 
     document.addEventListener("keydown", handleEsc);
 
+    // блокування скролу
+    document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleEsc);
+
+      // відновлення скролу
+      document.body.style.overflow = "auto";
     };
   }, [onClose]);
 
-  // КЛЮЧОВЕ: захист від SSR
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  return createPortal(
+  return ReactDOM.createPortal(
     <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
     >
       <div
+        className="bg-white p-6 rounded shadow-lg max-w-lg w-full"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "white",
-          padding: 20,
-          borderRadius: 8,
-          minWidth: 300,
-        }}
       >
         {children}
       </div>

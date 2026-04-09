@@ -66,3 +66,5 @@ export async function deleteNote(
 
   return response.data;
 }
+
+export type { Note };

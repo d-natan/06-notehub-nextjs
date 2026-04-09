@@ -1,29 +1,33 @@
 import Link from "next/link";
-import type { Note } from "../../types/note";
-import css from "./NoteList.module.css";
+import { Note } from "../../lib/api";
 
-interface NoteListProps {
-  notes: Note[];                // передаємо масив нотаток
-  handleDelete: (id: string) => void; // функція видалення нотатки
+export interface NoteListProps {
+  notes: Note[];
+  handleDelete: (id: string) => void;
 }
 
 export default function NoteList({ notes, handleDelete }: NoteListProps) {
-  if (!notes || notes.length === 0) {
-    return <p>No notes available.</p>;
-  }
-
   return (
-    <ul className={css.list}>
-      {notes.map(note => (
-        <li key={note.id} className={css.item}>
+    <ul>
+      {notes.map((note) => (
+        <li key={note.id} className="note-item">
           <Link href={`/notes/${note.id}`}>
-            <h3>{note.title}</h3>
+            <h2>{note.title}</h2>
           </Link>
 
           <p>{note.content}</p>
-          <p>{note.tag}</p>
 
-          <button onClick={() => handleDelete(note.id)}>
+          <span>{note.tag}</span>
+
+          <p>
+            Created:{" "}
+            {new Date(note.createdAt).toLocaleString()}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => handleDelete(note.id)}
+          >
             Delete
           </button>
         </li>
