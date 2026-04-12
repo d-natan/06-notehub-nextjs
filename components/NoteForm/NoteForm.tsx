@@ -43,9 +43,12 @@ export default function NoteForm({ onClose }: NoteFormProps) {
         tag: "Todo",
       }}
       validationSchema={schema}
-      onSubmit={(values, actions) => {
-        mutation.mutate(values);
-        actions.setSubmitting(false);
+      onSubmit={async (values, actions) => {
+        try {
+          await mutation.mutateAsync(values);
+        } finally {
+          actions.setSubmitting(false);
+        }
       }}
     >
       {({ isSubmitting }) => (
