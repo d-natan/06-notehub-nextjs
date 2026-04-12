@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 import { fetchNotes, FetchNotesResponse } from "../../lib/api";
 
@@ -16,8 +16,6 @@ export default function NotesClient() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-
   const debouncedSearch = useDebouncedCallback((value: string) => {
     setSearch(value);
     setPage(1);
@@ -26,11 +24,18 @@ export default function NotesClient() {
   const handleSearch = (value: string) => debouncedSearch(value);
   const handlePageChange = (page: number) => setPage(page);
 
-  const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
+  const { data, isLoading, isError } = useQuery<
+    FetchNotesResponse,
+    Error
+  >({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes({ page, search }),
-    placeholderData: () => queryClient.getQueryData<FetchNotesResponse>(["notes", page, search]),
-    staleTime: 1000, // замість keepPreviousData
+
+    // ключова зміна — правильний seamless pagination
+    placeholderData: (previousData) => previousData,
+
+    // можна залишити для кешування, але не для UX пагінації
+    staleTime: 1000,
   });
 
   if (isLoading) return <p>Loading...</p>;
@@ -38,7 +43,10 @@ export default function NotesClient() {
 
   return (
     <>
-      <button type="button" onClick={() => setIsModalOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+      >
         Create note
       </button>
 
